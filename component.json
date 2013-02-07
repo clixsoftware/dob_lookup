@@ -1,0 +1,10 @@
+{
+  "name": "dob_lookup",
+  "version": "1.0.0",
+  "main": ["./public/app/app.js"],
+  "dependencies": {
+    "jquery": "*", 
+	"underscore" : "*" ,
+	"backbone" : "*"
+  }
+}
