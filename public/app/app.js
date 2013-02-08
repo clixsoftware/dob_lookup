@@ -1,5 +1,9 @@
 $(function () {
 	
+	_.templateSettings = {
+	  interpolate : /\{\{(.+?)\}\}/g
+	};
+	
 	//console.log($("#searchBox a.button").attr("class"))
 	
 	var bldgModel = Backbone.Model.extend({
@@ -77,78 +81,26 @@ $(function () {
 
 
 	})
+	 
 	
-	var complaint_template = " <h3><%= descriptor %></h3>"; 
+	var complaint = Marionette.ItemView.extend({
+		
+	  template: '#complaint-template' , 
 	
-	var complaint = Backbone.View.extend({
+	
+	});
+	
+	
+	var complaints = Marionette.CollectionView.extend({
 		
-		template : _.template(complaint_template), 
-		
-		tagName : "div", 
-		
-		initialize : function(options) {
-			
-			this.model.bind('destroy', this.remove, this);
-			
-		} , 
-		
-		
-		render : function(model) {
-			
-
-			this.$el.html(this.template(this.model.toJSON())); 
- 
-			return this;
-
-		}
-		
+		itemView : complaint
 		
 	})
 
-	var complaints = Backbone.View.extend({
-		
-		collection : bldgs , 
-		
-		initialize : function(options) { 
-			
-			this.el = options.el;
-			
-		
-			bldgs.bind('add' , this.addItem , this)
-			
-			bldgs.bind('reset' , this.clearList , this)
-			
-		} ,
-		
-		addItem : function(model , collection , options) {
-			
-			var view = new complaint({
-				
-				model : model
-				
-			}) ; 
-			
-			console.log(view.render().el)
-			
-			this.$el.append(view.render().el)		
-			
-		}  , 
-		
-		clearList : function () {
-			
-			this.$el.html("")
-
-		}
-		
-		
-
-	}); 
-	
-	
 
 	var form = new searchForm({	el : $("#searchBox")}); 
 	
-	var complaints_list = new complaints({el : $("#complaints")})
+	var complaints_list = new complaints({el : $("#complaints") , collection : bldgs})
 	
 	
 	
