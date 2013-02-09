@@ -1,108 +1,173 @@
 $(function () {
 	
+	MyApp = new Backbone.Marionette.Application(); 
+	
+	MyApp.addRegions({
+		
+		header : "#header", 
+		
+		main : "#main"
+		
+	})
+	
+	MyApp.on("initialize:after" , function() {
+		
+		Backbone.history.start()
+		
+	})
+	
 	_.templateSettings = {
+		
 	  interpolate : /\{\{(.+?)\}\}/g
+	
 	};
 	
-	//console.log($("#searchBox a.button").attr("class"))
+	MyApp.module('Buildings', function(Buildings, App, Backbone, Marionette, $, _) {
+		
+		Buildings.Model = Backbone.Model.extend({
+
+			idAttribute : 'unique_key'
+
+		}); 
+
+		Buildings.Collection = Backbone.Collection.extend({
+
+			model : Buildings.Model  , 
+
+			url : 'building/' 	
+
+		});	
+		
+	}) 
 	
-	var bldgModel = Backbone.Model.extend({
-
-		idAttribute : 'unique_key'
-
-	}); 
-
-	var bldgsCollection = Backbone.Collection.extend({
-
-		model : bldgModel  , 
+	MyApp.module('Layout', function(Layout, App, Backbone, Marionette, $, _) {
 		
-		url : 'building/' , 
-		
-		initialize : function () { 
-			
-			
-		
-			this.on('add' ,  function (item , collection , options) {
-				
-				//console.log("adding")
-				
-			})
+		Layout.Header = Backbone.Marionette.Layout.extend({
 
-		}	
+			template : "#template-header", 
 
+			ui : {
 
-	}); 
-	
-	bldgs = new bldgsCollection(); 
-	
+				search_box : ".query"
 
-	var searchForm = Backbone.View.extend({
-		
+			}, 
 
-		initialize : function(options) { 
-			
-			this.el = options.el	
-			
-		}, 
+			events : {
 
-		events : {
+				'click .submit' : 'search', 
 
-			'click .submit' : 'search', 
-			
-			'keypress .query' : 'handleKeypress'
+				'keypress .query' : 'handleKeypress'
 
-		}, 
-		
-		handleKeypress : function(e) {
-			
-			if (e.keyCode === 13) {
-				
-				this.search()
+			}, 
+
+			handleKeypress : function(e) {
+
+				if (e.keyCode === 13) {
+
+					this.search()
+				}
+
+			} , 
+
+			search : function(e) { 
+
+				this.collection.reset()
+
+				if (e !== undefined && e !== null ) {
+
+					e.preventDefault();
+
+				}
+
+				var val = this.ui.search_box.val()
+
+				this.collection.fetch({ update: true,  data : {address : val}   })
+
 			}
+
+		})
+		
+	})
+
+	MyApp.module('Views', function(Views, App, Backbone, Marionette, $, _) {		
+		
+		Views.Complaint = Marionette.ItemView.extend({
+
+		  template: '#complaint-template'
+
+
+		});
+
+		Views.Complaints  = Marionette.CollectionView.extend({
+
+			itemView : Views.Complaint
+
+		})	
+		
+	})
+	
+	MyApp.Router = Marionette.AppRouter.extend({
+		
+		
+	})
+	
+	MyApp.Controller = function() { 
+		
+		this.bldgs = new MyApp.Buildings.Collection();
+		
+	}
+	
+	_.extend(MyApp.Controller.prototype, {
+		
+		start : function() { 
+			
+			this.showHeader(this.bldgs); 
+			
+			this.showMain(this.bldgs); 
 			
 		} , 
-
-		search : function(e) { 
+		
+		showHeader : function(collection) { 
 			
-			bldgs.reset()
-			
-			if (e !== undefined && e !== null ) {
+			var header = new MyApp.Layout.Header({
 				
-				e.preventDefault();
+				collection : collection
 				
-			}
+			})
 			
+			MyApp.header.show(header)
 			
-			var val = this.$('.query').val()
+		}, 
+		
+		showMain : function(collection) { 
 			
-			bldgs.fetch({ update: true,  data : {address : val}   })
-
+			var listView = new MyApp.Views.Complaints({
+				
+				collection : collection
+				
+			})
+			
+			MyApp.main.show(listView)
 		}
-
-
+			
 	})
-	 
 	
-	var complaint = Marionette.ItemView.extend({
+	MyApp.addInitializer(function() { 
+	
+		var controller = new MyApp.Controller(); 
 		
-	  template: '#complaint-template' , 
-	
-	
-	});
-	
-	
-	var complaints = Marionette.CollectionView.extend({
+		new MyApp.Router({
+			
+			controller : controller
+			
+		})
 		
-		itemView : complaint
+		controller.start();
+	
 		
 	})
-
-
-	var form = new searchForm({	el : $("#searchBox")}); 
 	
-	var complaints_list = new complaints({el : $("#complaints") , collection : bldgs})
-	
-	
+	MyApp.start()
 	
 })
 
