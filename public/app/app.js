@@ -62,6 +62,8 @@ $(function () {
 				
 				this.listenTo(this.collection , 'request' , this.updateSearchFor )
 				
+				this.listenTo(MyApp.vent , 'addressInit' , this.addressChange)
+				
 			}, 
 			
 			updateCount : function () { 
@@ -70,9 +72,17 @@ $(function () {
 				
 			} , 
 			
+			addressChange : function (val) {
+				
+				this.ui.searching_for.html("Searching for . . . <strong>" + val + "</strong>")	
+				
+			} , 
+			
 			updateSearchFor : function () { 
 				
-				this.ui.searching_for.html("Searching for . . . <strong>" + this.ui.search_box.val() + "</strong>")	
+				var val = this.ui.search_box.val()
+				
+				this.addressChange(val)
 			
 			}, 
 
@@ -102,28 +112,16 @@ $(function () {
 				}
 
 			} , 
+			
+			
 
-			search : function(e) { 
-
-				this.collection.reset()
-
-				if (e !== undefined && e !== null ) {
-
-					e.preventDefault();
-
-				}
+			search : function() { 
 
 				var val = this.ui.search_box.val()
 				
-				var options = {
-					
-					update: true,
-					
-					data : {address : val}
-					
-				}
+				Backbone.history.navigate('address/' + val , {trigger: true})
 				
-				this.collection.fetch(options)
+				
 
 			}
 
@@ -216,15 +214,23 @@ $(function () {
 	MyApp.Router = Marionette.AppRouter.extend({
 		
 		
+		
+		appRoutes : {
+			
+			"address/:address" : "fetchNew" 
+			
+		}
+		
+		
 	})
 	
-	MyApp.Controller = function() { 
+	MyApp.Controller = Marionette.Controller.extend({ 
 		
-		this.bldgs = new MyApp.Buildings.Collection();
+		initialize : function() { 
+			
+			this.bldgs = new MyApp.Buildings.Collection();	
 		
-	}
-	
-	_.extend(MyApp.Controller.prototype, {
+		} , 
 		
 		start : function() { 
 			
@@ -256,22 +262,42 @@ $(function () {
 			
 			
 			MyApp.main.show(main)
-		}
+		} , 
+		
+		fetchNew : function (val) { 
 			
+			this.bldgs.reset();
+
+			var options = {
+
+				update: true,
+
+				data : {address : val}
+
+			}
+
+			this.bldgs.fetch(options)
+			
+			MyApp.vent.trigger("addressInit" , val)
+		
+		
+		}
+		
+		
 	})
+	
 	
 	MyApp.addInitializer(function() { 
 	
 		var controller = new MyApp.Controller(); 
 		
-		new MyApp.Router({
+		var router = new MyApp.Router({
 			
 			controller : controller
 			
 		})
 		
 		controller.start();
-	
 		
 	})
 	
