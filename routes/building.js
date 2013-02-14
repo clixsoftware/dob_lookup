@@ -5,6 +5,14 @@
 
 var needle = require("needle");
 
+var LRU = require("lru-cache")
+  , options = { max: 500
+              , length: function (n) { return n.length }
+              , maxAge: 1000 * 60 * 60 * 24 }
+  , cache = LRU(options)
+
+
+
 exports.list = function(req, res){
 
   var address = req.query['address']
@@ -13,12 +21,24 @@ exports.list = function(req, res){
 
   query = "incident_address=" + address + "&$order=created_date DESC";  
 
-  needle.get("https://nycopendata.socrata.com/resource/erm2-nwe9.json?" + query , function (error , response , body) {
-	
-	res.send(body)
-	
-	
-  })
+
+	if ( cache.get(address) === undefined ) {
+
+		needle.get("https://nycopendata.socrata.com/resource/erm2-nwe9.json?" + query , function (error , response , body) {
+
+			cache.set(address , body)
+
+			res.send(body)
+		
+		})
+
+	} else {
+		
+		res.send(cache.get(address))
+
+	}
+
+  
   
 
 };

@@ -6,7 +6,7 @@ $(function () {
 		
 		header : "#header", 
 		
-		main : "#main"
+		main : "#main" 
 		
 	})
 	
@@ -18,7 +18,9 @@ $(function () {
 	
 	_.templateSettings = {
 		
-	  interpolate : /\{\{(.+?)\}\}/g
+	  	evaluate:    /\{\{(.+?)\}\}/g,
+	
+		interpolate: /\{\{=(.+?)\}\}/g
 	
 	};
 	
@@ -26,7 +28,15 @@ $(function () {
 		
 		Buildings.Model = Backbone.Model.extend({
 
-			idAttribute : 'unique_key'
+			idAttribute : 'unique_key', 
+			
+			defaults : {
+				
+				closed_date : null
+				
+			}
+			
+			
 
 		}); 
 
@@ -34,8 +44,8 @@ $(function () {
 
 			model : Buildings.Model  , 
 
-			url : 'building/' 	
-
+			url : 'building/' 	 
+			
 		});	
 		
 	}) 
@@ -45,10 +55,34 @@ $(function () {
 		Layout.Header = Backbone.Marionette.Layout.extend({
 
 			template : "#template-header", 
+			
+			initialize : function(options) {
+				
+				this.listenTo(this.collection , 'sync' , this.updateCount )
+				
+				this.listenTo(this.collection , 'request' , this.updateSearchFor )
+				
+			}, 
+			
+			updateCount : function () { 
+					
+				this.ui.count.html(this.collection.length + " results")	
+				
+			} , 
+			
+			updateSearchFor : function () { 
+				
+				this.ui.searching_for.html("Searching for . . . <strong>" + this.ui.search_box.val() + "</strong>")	
+			
+			}, 
 
 			ui : {
 
-				search_box : ".query"
+				search_box : ".query" , 
+				
+				count : ".count" , 
+				
+				searching_for : ".searching-for"
 
 			}, 
 
@@ -80,11 +114,82 @@ $(function () {
 				}
 
 				var val = this.ui.search_box.val()
-
-				this.collection.fetch({ update: true,  data : {address : val}   })
+				
+				var options = {
+					
+					update: true,
+					
+					data : {address : val}
+					
+				}
+				
+				this.collection.fetch(options)
 
 			}
 
+		}) ; 
+		
+		Layout.Main = Backbone.Marionette.Layout.extend({
+			
+			template : "#template-main", 
+			
+			regions : {
+				
+				list : '#complaintList'
+				
+			} , 
+			
+			initialize : function(options) {
+
+				this.listenTo(this.collection , "request" , this.loadStart); 
+				
+				this.listenTo(this.collection , "sync" , this.sync); 
+				
+				this.listenTo(this.collection , "error" , this.error); 
+				
+
+			},
+			
+			onRender : function() {
+				
+				var listView = new MyApp.Views.Complaints({
+				
+					collection : this.collection
+				
+				})
+				
+				this.list.show(listView)
+				
+			} , 
+			
+			/// Requests can be slow, added loader functionality
+
+			loadStart : function() { 
+
+				this.$(".list").removeClass("show").addClass("hidden"); 
+								
+				this.$(".error").removeClass("show").addClass("hidden"); 
+				
+				this.$(".loader").removeClass("hidden").addClass("show");
+
+			} , 
+
+			sync : function () { 
+
+				this.$(".loader").removeClass("show").addClass("hidden")
+				
+				this.$(".list").removeClass("hidden").addClass("show")
+
+			} , 
+
+			error : function () { 
+				
+				this.$(".loader").removeClass("show").addClass("hidden")
+
+				this.$(".error").removeClass("hidden").addClass("show")
+
+			} 
+			
 		})
 		
 	})
@@ -93,14 +198,16 @@ $(function () {
 		
 		Views.Complaint = Marionette.ItemView.extend({
 
-		  template: '#complaint-template'
-
+		  template: '#complaint-template' , 
+		
+		  className : "item-row"
+	
 
 		});
 
 		Views.Complaints  = Marionette.CollectionView.extend({
 
-			itemView : Views.Complaint
+			itemView : Views.Complaint  
 
 		})	
 		
@@ -141,13 +248,14 @@ $(function () {
 		
 		showMain : function(collection) { 
 			
-			var listView = new MyApp.Views.Complaints({
-				
+			var main = new MyApp.Layout.Main({
+										
 				collection : collection
-				
+										
 			})
 			
-			MyApp.main.show(listView)
+			
+			MyApp.main.show(main)
 		}
 			
 	})

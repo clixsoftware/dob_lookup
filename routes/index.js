@@ -5,6 +5,6 @@
 
 exports.index = function(req, res){
 	
-  res.render('index', { title: 'DOB Lookup' });
+  res.render('index', { title: 'NYC Building Research' });
 
 };
