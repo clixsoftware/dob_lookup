@@ -80,6 +80,10 @@ $(function () {
 			
 			updateSearchFor : function () { 
 				
+				this.ui.error.removeClass("show").addClass("hidden"); 
+				
+				
+				
 				var val = this.ui.search_box.val()
 				
 				this.addressChange(val)
@@ -92,7 +96,11 @@ $(function () {
 				
 				count : ".count" , 
 				
-				searching_for : ".searching-for"
+				searching_for : ".searching-for", 
+				
+				error_msg : '.alert-box p', 
+				
+				error : '.error'
 
 			}, 
 
@@ -113,11 +121,21 @@ $(function () {
 
 			} , 
 			
-			
-
 			search : function() { 
-
+				
 				var val = this.ui.search_box.val()
+				
+				if (val === '') {
+					
+					this.ui.error_msg.html("Address cannot be blank"); 
+					
+					console.log(this.ui.error)
+					
+					this.ui.error.removeClass("hidden").addClass("show");
+					
+					return false
+					
+				}
 				
 				Backbone.history.navigate('address/' + val , {trigger: true})
 				
@@ -163,6 +181,7 @@ $(function () {
 			/// Requests can be slow, added loader functionality
 
 			loadStart : function() { 
+				
 
 				this.$(".list").removeClass("show").addClass("hidden"); 
 								
@@ -192,7 +211,15 @@ $(function () {
 		
 	})
 
-	MyApp.module('Views', function(Views, App, Backbone, Marionette, $, _) {		
+	MyApp.module('Views', function(Views, App, Backbone, Marionette, $, _) {
+		
+		emptyResult  = Marionette.ItemView.extend({
+			
+			template : '#empty-result'
+			
+		})
+		
+		console.log(emptyResult)		
 		
 		Views.Complaint = Marionette.ItemView.extend({
 
@@ -205,7 +232,9 @@ $(function () {
 
 		Views.Complaints  = Marionette.CollectionView.extend({
 
-			itemView : Views.Complaint  
+			itemView : Views.Complaint , 
+			
+			emptyView : emptyResult
 
 		})	
 		
@@ -229,14 +258,14 @@ $(function () {
 		initialize : function() { 
 			
 			this.bldgs = new MyApp.Buildings.Collection();	
+			
+			
 		
 		} , 
 		
 		start : function() { 
 			
 			this.showHeader(this.bldgs); 
-			
-			this.showMain(this.bldgs); 
 			
 		} , 
 		
@@ -277,6 +306,8 @@ $(function () {
 			}
 
 			this.bldgs.fetch(options)
+			
+			this.showMain(this.bldgs);
 			
 			MyApp.vent.trigger("addressInit" , val)
 		

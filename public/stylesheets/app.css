@@ -10646,3 +10646,19 @@ table.hide-for-medium {
   border-bottom: 1px solid #ccc;
   margin-bottom: 15px;
 }
+
+/* line 105, ../sass/app.scss */
+.button {
+  width: 100%;
+}
+
+/* line 111, ../sass/app.scss */
+.alert p {
+  margin-bottom: 0;
+  font-weight: bold;
+}
+
+/* line 119, ../sass/app.scss */
+.empty-result h3 {
+  text-align: center;
+}
