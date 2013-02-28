@@ -217,9 +217,7 @@ $(function () {
 			
 			template : '#empty-result'
 			
-		})
-		
-		console.log(emptyResult)		
+		})		
 		
 		Views.Complaint = Marionette.ItemView.extend({
 
