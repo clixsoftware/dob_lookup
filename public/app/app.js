@@ -100,7 +100,9 @@ $(function () {
 				
 				error_msg : '.alert-box p', 
 				
-				error : '.error'
+				error : '.error' , 
+				
+				zip : '.zip'
 
 			}, 
 
@@ -108,7 +110,9 @@ $(function () {
 
 				'click .submit' : 'search', 
 
-				'keypress .query' : 'handleKeypress'
+				'keypress .query' : 'handleKeypress' , 
+				
+				'keypress .zip' : 'handleKeypress'
 
 			}, 
 
@@ -117,6 +121,7 @@ $(function () {
 				if (e.keyCode === 13) {
 
 					this.search()
+					
 				}
 
 			} , 
@@ -125,11 +130,32 @@ $(function () {
 				
 				var val = this.ui.search_box.val()
 				
+				var zip = this.ui.zip.val()
+				
+				var error = false
+				
+				var error_msg = ''
+				
+				
 				if (val === '') {
 					
-					this.ui.error_msg.html("Address cannot be blank"); 
+					error = true
 					
-					console.log(this.ui.error)
+					error_msg += "Address cannot be blank. "
+					
+				}
+				
+				if (zip === '') {
+					
+					error = true
+					
+					error_msg += "Zipcode cannot be blank. "
+					
+				}
+				
+				if (error === true) {
+					
+					this.ui.error_msg.html(error_msg); 
 					
 					this.ui.error.removeClass("hidden").addClass("show");
 					
@@ -137,7 +163,9 @@ $(function () {
 					
 				}
 				
-				Backbone.history.navigate('address/' + val , {trigger: true})
+				console.log("search end")
+				
+				Backbone.history.navigate('address/' + val + '/zip/' + zip , {trigger: true})
 				
 				
 
@@ -152,6 +180,16 @@ $(function () {
 			regions : {
 				
 				list : '#complaintList'
+				
+			} , 
+			
+			ui : {
+				
+				list : '.list' , 
+				
+				loader : '.loader' , 
+				
+				error : '.error'
 				
 			} , 
 			
@@ -182,28 +220,27 @@ $(function () {
 
 			loadStart : function() { 
 				
-
-				this.$(".list").removeClass("show").addClass("hidden"); 
+				this.ui.list.removeClass("show").addClass("hidden"); 
 								
-				this.$(".error").removeClass("show").addClass("hidden"); 
+				this.ui.error.removeClass("show").addClass("hidden"); 
 				
-				this.$(".loader").removeClass("hidden").addClass("show");
+				this.ui.loader.removeClass("hidden").addClass("show");
 
 			} , 
 
 			sync : function () { 
 
-				this.$(".loader").removeClass("show").addClass("hidden")
+				this.ui.loader.removeClass("show").addClass("hidden")
 				
-				this.$(".list").removeClass("hidden").addClass("show")
+				this.ui.list.removeClass("hidden").addClass("show")
 
 			} , 
 
 			error : function () { 
 				
-				this.$(".loader").removeClass("show").addClass("hidden")
+				this.ui.loader.removeClass("show").addClass("hidden")
 
-				this.$(".error").removeClass("hidden").addClass("show")
+				this.ui.error.removeClass("hidden").addClass("show")
 
 			} 
 			
@@ -230,7 +267,7 @@ $(function () {
 
 		Views.Complaints  = Marionette.CollectionView.extend({
 
-			itemView : Views.Complaint , 
+			itemView : Views.Complaint, 
 			
 			emptyView : emptyResult
 
@@ -244,7 +281,7 @@ $(function () {
 		
 		appRoutes : {
 			
-			"address/:address" : "fetchNew" 
+			"address/:address/zip/:zip" : "fetchNew" 
 			
 		}
 		
@@ -287,11 +324,11 @@ $(function () {
 										
 			})
 			
-			
 			MyApp.main.show(main)
+			
 		} , 
 		
-		fetchNew : function (val) { 
+		fetchNew : function (val , zip) { 
 			
 			this.bldgs.reset();
 
@@ -299,13 +336,15 @@ $(function () {
 
 				update: true,
 
-				data : {address : val}
+				data : {address : val , zip: zip}
 
 			}
 
-			this.bldgs.fetch(options)
+			
 			
 			this.showMain(this.bldgs);
+			
+			this.bldgs.fetch(options)
 			
 			MyApp.vent.trigger("addressInit" , val)
 		
